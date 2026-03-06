@@ -3,7 +3,8 @@ import $ from 'jquery';
 
 import $svg from '../dom';
 import { Point2D, Polyline, Vertex, Side, BezierSide,
-         Direction, Oval, Parallelogram } from '../shape';
+         Direction, Oval, Parallelogram, 
+         StraightSide} from '../shape';
 import { SketchComponent, SketchEvent, Knob } from './sketch';
 
 import fp = Point2D.fp;
@@ -59,7 +60,8 @@ abstract class ShapeComponentBase<Shape> extends ShapeComponent {
      */
     _render() {
         return this.onto.addShape(this.render())
-            .on('click', (ev) => this.emit('click', this.onto._mkMouseEvent(ev)));
+            .on('mousedown', ev => ev.stopPropagation())
+            .on('click', ev => this.emit('click', this.onto._mkMouseEvent(ev)));
     }
 }
 
@@ -103,9 +105,14 @@ class PolylineComponent extends ShapeComponentBase<Polyline> {
         this.knobs = this.spot = undefined;
     }
 
-    _mkknob(u: Vertex) {
-        var knob = new VertexKnob(u.at);
-        this.onto.addControl(knob);
+    reselect() {
+        this.deselect(); this.select();
+    }
+
+    _mkknob(u: Vertex, knob?: Knob) {
+        if (!knob) {
+            this.onto.addControl(knob = new VertexKnob(u.at));
+        }
         knob.on('move', ({at}) => {
             this.unhit();  /** @todo only if affected */
             u.at = at; this.update();
@@ -134,6 +141,13 @@ class PolylineComponent extends ShapeComponentBase<Polyline> {
             this.update();
             if (this.spot && this.spot !== knob) this.unhit();
         });
+        knob.on('mousedown', ev => {
+            if (ev.altKey) {
+                this.shape.replaceSide(bside, new StraightSide);
+                this.onto.removeControl(knob);
+                this.update();
+            }
+        });
         return knob;
     }
 
@@ -146,12 +160,21 @@ class PolylineComponent extends ShapeComponentBase<Polyline> {
         var knob = new SpotKnob(at, side, !(side instanceof BezierSide),
                                 ['ephemeral']);
         this.onto.addControl(knob);
-        var moveh = ({at}) => {
-            if (this.spot === knob) this.spot = undefined;
-            knob.removeListener('move', moveh)
-            this.knobs.push(this._mkctrl(side, at, knob));
+        var moveh = ({at, $ev}: any) => {
+            if ($ev.altKey) {
+                if (this.spot === knob) this.spot = undefined;
+                knob.removeListener('move', moveh)
+                this.knobs.push(this._mkctrl(side, at, knob));
+            }
+            else {
+                if (this.spot === knob) this.spot = undefined;
+                knob.removeListener('move', moveh);
+                let u = this.shape.splitSide(side, at, this.addDir);
+                this.knobs.push(this._mkknob(u, knob));
+            }
         };
         knob.on('move', moveh);
+        knob.on('dragend', () => this.reselect());
         return knob;
     }
 

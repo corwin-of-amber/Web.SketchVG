@@ -17,7 +17,7 @@ class SketchEditor {
 
     _bindEvents() {
         this.sketch.on('mousedown', (ev) => {
-            if (ev.altKey && this.selection.size > 0) {
+            if (ev.$ev.altKey && this.selection.size > 0) {
                 for (let p of this.selection) {
                     if (p.edit(ev.at)) break;
                 }

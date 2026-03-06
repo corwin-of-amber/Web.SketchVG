@@ -1,11 +1,11 @@
 import $ from 'jquery';
-import 'jquery-ui-dist/jquery-ui.css';
+//import 'jquery-ui-dist/jquery-ui.css';
 
 import './editor.css';
 
-// @ts-ignore
+// @ts-ignore  -- for $el.draggable
 window.$ = window.jQuery = $;
-require('jquery-ui-dist/jquery-ui');
+import 'jquery-ui-dist/jquery-ui';
 
 
 

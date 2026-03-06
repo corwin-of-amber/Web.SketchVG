@@ -1,9 +1,7 @@
 import { EventEmitter } from 'events';
-import $ from 'jquery';
 
 import $svg, { DraggableEventUIParams } from '../dom';
 import { Point2D } from '../shape';
-import { ShapeComponent } from './shape';
 
 
 
@@ -68,10 +66,11 @@ class SketchComponent extends EventEmitter {
         this.emit(ev.type, this._mkMouseEvent(ev));
     }
 
-    _mkMouseEvent<E extends JQuery.MouseEventBase>(ev: E) {
-        var evat: SketchEvent<E> = ev;
-        evat.at = $svg.coordDOMToSVG(this.svg, ev.offsetX, ev.offsetY);
-        return evat;
+    _mkMouseEvent<E extends JQuery.MouseEventBase>(ev: E): SketchEvent<E> {
+        return {
+            at: $svg.coordDOMToSVG(this.svg, ev.offsetX, ev.offsetY),
+            $ev: ev
+        };
     }
 }
 
@@ -106,7 +105,12 @@ class Knob extends ControlWidget {
             $svg.draggable(this.el, {
                 drag: (event, ui: DraggableEventUIParams) => {
                     this.at = ui.center;
-                    this.emit('move', {target: this, at: this.at});
+                    this.emit('move', {target: this, at: this.at,
+                        $ev: event.originalEvent});
+                },
+                stop: (event) => {
+                    this.emit('dragend', {target: this,
+                        $ev: event.originalEvent});
                 }
             });
         }
@@ -125,7 +129,13 @@ class Knob extends ControlWidget {
     }
 }
 
-type SketchEvent<E> = E & {at?: Point2D};
+interface Knob {
+    on(type: 'mousedown', h: (ev: JQuery.MouseMoveEvent) => void): this
+    on(type: 'move', h: (ev: SketchEvent<JQuery.MouseMoveEvent, Knob>) => void): this
+    on(type: 'dragend', h: (ev: SketchEvent<JQuery.MouseUpEvent, Knob>) => void): this
+}
+
+type SketchEvent<E, T = never> = {at?: Point2D, $ev?: E, target?: T};
 
 
 
