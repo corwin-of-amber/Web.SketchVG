@@ -2,9 +2,9 @@ import { EventEmitter } from 'events';
 import $ from 'jquery';
 
 import $svg from '../dom';
-import { Point2D, Polyline, Vertex, Side, BezierSide,
+import { Shape2D, Point2D, Polyline, Vertex, Side, BezierSide,
          Direction, Oval, Parallelogram, 
-         StraightSide} from '../shape';
+         StraightSide } from '../shape';
 import { SketchComponent, SketchEvent, Knob } from './sketch';
 
 import fp = Point2D.fp;
@@ -16,6 +16,19 @@ abstract class ShapeComponent extends EventEmitter {
     abstract deselect(): void
     abstract hit(at: Point2D): boolean
     abstract edit(at: Point2D): boolean
+
+    static promote(shape: ShapeComponent | Shape2D, onto: SketchComponent) {
+        if (shape instanceof ShapeComponent)
+            return shape;
+        else if (shape instanceof Polyline)
+            return new PolylineComponent(onto, shape);
+        else if (shape instanceof Oval)
+            return new OvalComponent(onto, shape);
+        else if (shape instanceof Parallelogram)
+            return new ParallelogramComponent(onto, shape);
+        else
+            throw new Error(`unknown shape: ${shape.constructor.name}`);
+    }
 }
 
 interface ShapeComponent {

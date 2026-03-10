@@ -1,7 +1,7 @@
 import { Polyline, Oval, Point2D, Shape2D, Parallelogram } from './shape';
 import { SketchComponent } from './components/sketch';
 import { ShapeComponent, PolylineComponent, OvalComponent, ParallelogramComponent, ShapeComponentBase } from './components/shape';
-import './editor.css';
+import './editor.scss';
 
 
 class SketchEditor {
@@ -9,7 +9,7 @@ class SketchEditor {
     shapes: ShapeComponent[]
     selection: Set<ShapeComponent> = new Set
 
-    constructor(svg: JQuery<SVGSVGElement>) {
+    constructor(svg: SVGSVGElement | JQuery<SVGSVGElement>) {
         this.sketch = new SketchComponent(svg);
         this.shapes = [];
         this._bindEvents();
@@ -47,13 +47,19 @@ class SketchEditor {
         return this.add(new ParallelogramComponent(this.sketch, shape));
     }
 
-    add<T extends ShapeComponent>(shape: T) {
-        shape.on('click', (ev) => {
-            if (this.selection.has(shape)) shape.hit(ev.at);
-            else this.select(shape, ev.at); 
+    add<T extends ShapeComponent | Shape2D>(shape: T): (T extends ShapeComponent ? T : ShapeComponent) {
+        let component = ShapeComponent.promote(shape, this.sketch);
+        component.on('click', (ev) => {
+            if (this.selection.has(component)) component.hit(ev.at);
+            else this.select(component, ev.at); 
         });
-        this.shapes.push(shape);
-        return shape;
+        this.shapes.push(component);
+        return component as any;
+    }
+
+    has(shape: ShapeComponent | Shape2D) {
+        return this.shapes.some(s => s == shape ||
+            (s instanceof ShapeComponentBase && s.shape == shape));
     }
 
     select(component: ShapeComponent, at?: Point2D) {

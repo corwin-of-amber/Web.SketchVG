@@ -12,9 +12,9 @@ class SketchComponent extends EventEmitter {
     mark: JQuery<SVGGElement>
     ctrl: JQuery<SVGGElement>
 
-    constructor(svg: JQuery<SVGSVGElement>) {
+    constructor(svg: SVGSVGElement | JQuery<SVGSVGElement>) {
         super();
-        this.svg = svg;
+        this.svg = svg = $(svg) //svg instanceof Element ? $(svg) : svg;
         this.grid = $svg('g'); svg.append(this.grid.addClass('grid'));
         this.draw = $svg('g'); svg.append(this.draw.addClass('draw'));
         this.mark = $svg('g'); svg.append(this.mark.addClass('mark'));

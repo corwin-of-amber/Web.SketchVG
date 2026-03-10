@@ -149,15 +149,29 @@ class Polyline extends Shape2D {
 
     /* Whole-shape transforms */
 
-    scale(scale: number | Point2D, epicenter?: Point2D) {
-        var o = epicenter || this.vertices[0]?.at || Point2D.O;
-        if (typeof scale === 'number') scale = {x: scale, y: scale};
-        var m = new Flatten.Matrix().translate(-o.x, -o.y)
-                                    .scale(scale.x, scale.y)
-                                    .translate(o.x, o.y);
-
+    transform(m: Flatten.Matrix) {
         for (let obj of [...this.vertices, ...this.sides])
             obj.transform(m);
+    }
+
+    translate(delta: Point2D) {
+        let m = new Flatten.Matrix().translate(delta.x, delta.y);
+        this.transform(m);
+    }
+
+    scale(scale: number | Point2D, epicenter?: Point2D) {
+        let o = epicenter || this.vertices[0]?.at || Point2D.O;
+        if (typeof scale === 'number') scale = {x: scale, y: scale};
+        let m = new Flatten.Matrix().translate(-o.x, -o.y)
+                                    .scale(scale.x, scale.y)
+                                    .translate(o.x, o.y);
+        this.transform(m);
+    }
+
+    static makeSimple(vertices: Point2D[]) {
+        let p = new this;
+        for (let v of vertices) p.addVertex(new Vertex(v));
+        return p;
     }
 
     /* EJSON */
@@ -169,8 +183,8 @@ class Polyline extends Shape2D {
         };
     }
     static fromJSONValue(v: {vertices: Vertex[], sides: Side[]}) {
-        v.vertices = v.vertices.map(EJSON.fromJSONValue);
-        v.sides    = v.sides   .map(EJSON.fromJSONValue);
+        v.vertices = v.vertices.map(EJSON.fromJSONValue as any); // `@types/ejson` is wrong
+        v.sides    = v.sides   .map(EJSON.fromJSONValue as any);
         var p = new Polyline();
         for (let [u, side] of _.zip(v.vertices, v.sides))
             p.addVertex(u, side);

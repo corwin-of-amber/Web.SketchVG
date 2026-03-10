@@ -1,11 +1,11 @@
 {
 	"name": "sketchvg",
-	"main": "build/kremlin/index.html",
+	"main": "index.js",
 	"dependencies": {
 		"@flatten-js/core": "^1.2.15",
 		"@types/lodash": "^4.14.162",
 		"bezier-js": "^4.0.3",
-		"ejson": "^2.2.0",
+		"ejson": "^2.2.3",
 		"jquery": "^3.5.1",
 		"jquery-ui-dist": "^1.12.1",
 		"lodash": "^4.17.20",
