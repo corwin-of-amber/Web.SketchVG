@@ -28,24 +28,6 @@ class SketchEditor {
         });
     }
 
-    newShape(shape: Shape2D): ShapeComponent {
-        if (shape instanceof Polyline) return this.newPolyline(shape);
-        else if (shape instanceof Oval) return this.newOval(shape);
-        else if (shape instanceof Parallelogram) return this.newParallelogram(shape);
-        else throw new Error(`unrecognized shape for editing: '${shape.constructor.name}'`);
-    }
-
-    newPolyline(shape: Polyline) {
-        return this.add(new PolylineComponent(this.sketch, shape));
-    }
-
-    newOval(shape: Oval) {
-        return this.add(new OvalComponent(this.sketch, shape));
-    }
-
-    newParallelogram(shape: Parallelogram) {
-        return this.add(new ParallelogramComponent(this.sketch, shape));
-    }
 
     add<T extends ShapeComponent | Shape2D>(shape: T): (T extends ShapeComponent ? T : ShapeComponent) {
         let component = ShapeComponent.promote(shape, this.sketch);
@@ -60,6 +42,15 @@ class SketchEditor {
     has(shape: ShapeComponent | Shape2D) {
         return this.shapes.some(s => s == shape ||
             (s instanceof ShapeComponentBase && s.shape == shape));
+    }
+
+    remove(shape: ShapeComponent | Shape2D) {
+        let idx = this.shapes.findIndex(s => s == shape ||
+            (s instanceof ShapeComponentBase && s.shape == shape));
+        if (idx >= 0) {
+            this.shapes[idx].remove();
+            this.shapes.splice(idx, 1);
+        }
     }
 
     select(component: ShapeComponent, at?: Point2D) {

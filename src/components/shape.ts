@@ -16,6 +16,7 @@ abstract class ShapeComponent extends EventEmitter {
     abstract deselect(): void
     abstract hit(at: Point2D): boolean
     abstract edit(at: Point2D): boolean
+    abstract remove(): void
 
     static promote(shape: ShapeComponent | Shape2D, onto: SketchComponent) {
         if (shape instanceof ShapeComponent)
@@ -33,6 +34,7 @@ abstract class ShapeComponent extends EventEmitter {
 
 interface ShapeComponent {
     on(type: 'click', h: (ev: SketchEvent<JQuery.ClickEvent>) => void): this;
+    on(type: 'mousedown', h: (ev: SketchEvent<JQuery.MouseDownEvent>) => void): this;
     on(type: 'change', h: (t: this) => void): this;
 }
 
@@ -67,13 +69,18 @@ abstract class ShapeComponentBase<Shape> extends ShapeComponent {
         this.emit('change');
     }
 
+    remove() {
+        this.deselect();
+        this.onto.removeShape(this.elements);
+    }
+
     /**
      * Low-level render function, calls `render()` and places result on drawing area.
      * @returns rendered SVG elements
      */
     _render() {
         return this.onto.addShape(this.render())
-            .on('mousedown', ev => ev.stopPropagation())
+            .on('mousedown', ev => { ev.stopPropagation(); this.emit('mousedown', this.onto._mkMouseEvent(ev)); })
             .on('click', ev => this.emit('click', this.onto._mkMouseEvent(ev)));
     }
 }

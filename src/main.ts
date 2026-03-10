@@ -14,7 +14,7 @@ function main() {
     shape = load() || shape;
 
     var editor = new SketchEditor($<SVGSVGElement>('#panel svg')),
-        p = editor.newPolyline(shape);
+        p = editor.add(shape);
 
     window.addEventListener('beforeunload', () => save(shape));
 

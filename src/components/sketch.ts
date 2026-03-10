@@ -53,6 +53,10 @@ class SketchComponent extends EventEmitter {
         return shape.add(<any>shadow);
     }
 
+    removeShape(shape: JQuery<SVGElement>) {
+        shape.remove();
+    }
+
     addControl(widget: ControlWidget) {
         this.ctrl.append(widget.el);
         widget.mounted();
